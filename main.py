@@ -1,13 +1,10 @@
-from gui import create_gui, create_register_gui, create_admin_approve_gui
+# /main.py
+
+from gui import create_gui
+from users import register_user, approve_user
 
 def main():
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == 'register':
-        create_register_gui()
-    elif len(sys.argv) > 1 and sys.argv[1] == 'admin':
-        create_admin_approve_gui()
-    else:
-        create_gui()
+    create_gui()
 
 if __name__ == "__main__":
     main()
