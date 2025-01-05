@@ -5,42 +5,48 @@ from model import ItemType, Item
 
 DATA_FILE = 'items.json'
 USER_DATA_FILE = 'users.json'
+ITEM_TYPES_FILE = 'item_types.json'
 
-def load_data():
+def load_data(file):
     try:
-        with open(DATA_FILE, 'r') as file:
-            return json.load(file)
+        with open(file, 'r') as f:
+            return json.load(f)
     except FileNotFoundError:
         return {}
 
-def save_data(items):
-    with open(DATA_FILE, 'w') as file:
-        json.dump(items, file, indent=4)
+def save_data(data, file):
+    with open(file, 'w') as f:
+        json.dump(data, f, indent=4)
+
+def load_items():
+    return load_data(DATA_FILE)
 
 def load_users():
-    try:
-        with open(USER_DATA_FILE, 'r') as file:
-            return json.load(file)
-    except FileNotFoundError:
-        return {}
+    return load_data(USER_DATA_FILE)
+
+def load_item_types():
+    return load_data(ITEM_TYPES_FILE)
+
+def save_items(items):
+    save_data(items, DATA_FILE)
 
 def save_users(users):
-    with open(USER_DATA_FILE, 'w') as file:
-        json.dump(users, file, indent=4)
+    save_data(users, USER_DATA_FILE)
 
-# 我们有以下物品类型数据结构
+def save_item_types(item_types):
+    save_data(item_types, ITEM_TYPES_FILE)
+
 item_types = {
     "food": ItemType("food", {"expiration_date": "", "quantity": ""}),
-    "book": ItemType("book", {"author": "", "publisher": ""})
+    "book": ItemType("book", {"author": "", "publisher": ""}),
+    "tool": ItemType("tool", {"brand": "", "model": ""})
 }
-
-def get_item_types():
-    return item_types
 
 def add_item_type(item_type):
     item_types[item_type.name] = item_type
+    save_item_types(item_types)
 
 def add_item(item):
-    items = load_data()
+    items = load_items()
     items[item.name] = item.__dict__
-    save_data(items)
+    save_items(items)
