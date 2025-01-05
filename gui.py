@@ -1,50 +1,35 @@
-import tkinter as tk
-from tkinter import messagebox
-from data import load_items, save_items, add_item, remove_item, find_item
-
 def create_gui():
     root = tk.Tk()
     root.title("物品复活软件")
 
-    items = load_items()
+    def add_item_interface():
+        # 弹出对话框让用户输入物品信息
+        name = simpledialog.askstring("输入", "物品名称:")
+        description = simpledialog.askstring("输入", "物品描述:")
+        address = simpledialog.askstring("输入", "物品地址:")
+        contact_phone = simpledialog.askstring("输入", "联系人手机:")
+        email = simpledialog.askstring("输入", "邮箱:")
+        item_type = simpledialog.askstring("输入", "物品类型:")
 
-    def add_item_to_list():
-        _, message = add_item(items, name_entry.get(), description_entry.get(), contact_entry.get())
-        messagebox.showinfo("信息", message)
-        list_items()
+        # 根据选择的物品类型获取属性
+        attributes = get_item_types()[item_type].attributes
+        for attr, default in attributes.items():
+            value = simpledialog.askstring(f"输入{attr}", f"{attr} ({default}):")
+            attributes[attr] = value
 
-    def remove_item_from_list():
-        _, message = remove_item(items, name_entry.get())
-        messagebox.showinfo("信息", message)
-        list_items()
+        # 创建物品并添加到数据中
+        new_item = Item(item_type, name, description, address, contact_phone, email, **attributes)
+        add_item(new_item)
+        messagebox.showinfo("成功", "物品添加成功！")
 
-    def list_items():
-        listbox.delete(0, tk.END)
-        for name, info in items.items():
-            listbox.insert(tk.END, f"{name}: {info['description']}, 联系人: {info['contact']}")
+    # 添加物品按钮
+    add_button = tk.Button(root, text="添加物品", command=add_item_interface)
+    add_button.pack()
 
-    def find_item_in_list():
-        _, message = find_item(items, name_entry.get())
-        messagebox.showinfo("信息", message)
+    root.mainloop()
 
-    # 输入框标签和输入框
-    tk.Label(root, text="物品名称:").grid(row=0, column=0)
-    name_entry = tk.Entry(root)
-    name_entry.grid(row=0, column=1)
-
-    tk.Label(root, text="物品描述:").grid(row=1, column=0)
-    description_entry = tk.Entry(root)
-    description_entry.grid(row=1, column=1)
-
-    tk.Label(root, text="联系人信息:").grid(row=2, column=0)
-    contact_entry = tk.Entry(root)
-    contact_entry.grid(row=2, column=1)
-
-    # 按钮
-    tk.Button(root, text="添加物品", command=add_item_to_list).grid(row=3, column=0)
-    tk.Button(root, text="删除物品", command=remove_item_from_list).grid(row=3, column=1)
-    tk.Button(root, text="显示物品列表", command=list_items).grid(row=4, column=0)
-    tk.Button(root, text="查找物品", command=find_item_in_list).grid(row=4, column=1)
+if __name__ == "__main__":
+    create_gui()
 
     # 列表框
     listbox = tk.Listbox(root)
