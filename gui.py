@@ -1,131 +1,73 @@
-# /gui.py
+# gui.py
 import tkinter as tk
-from tkinter import simpledialog, messagebox, ttk
-from model import ItemType, Item, User
-from data import item_types
-from data import load_item_types, add_item, load_users, save_users, register_user, approve_user
+from tkinter import messagebox, simpledialog
+from users import UserManager
+from data import load_data
+from model import User, Item, ItemType
 
-def create_register_gui():
-    root = tk.Tk()
-    root.title("用户注册")
+class App:
+    def __init__(self, root, user_manager):
+        self.root = root
+        self.user_manager = user_manager
+        self.current_user = None
 
-    def register():
-        username = username_entry.get()
-        email = email_entry.get()
-        address = address_entry.get()
-        phone = phone_entry.get()
-        response = register_user(username, email, address, phone)
-        messagebox.showinfo("注册结果", response)
-        root.destroy()
+        self.root.title("物品复活系统")
+        self.root.geometry("400x300")
 
-    tk.Label(root, text="用户名:").grid(row=0, column=0)
-    username_entry = tk.Entry(root)
-    username_entry.grid(row=0, column=1)
+        self.create_widgets()
 
-    tk.Label(root, text="邮箱:").grid(row=1, column=0)
-    email_entry = tk.Entry(root)
-    email_entry.grid(row=1, column=1)
+    def create_widgets(self):
+        self.login_frame = tk.Frame(self.root)
+        self.login_frame.pack(pady=20)
 
-    tk.Label(root, text="地址:").grid(row=2, column=0)
-    address_entry = tk.Entry(root)
-    address_entry.grid(row=2, column=1)
+        tk.Label(self.login_frame, text="用户名:").grid(row=0, column=0)
+        self.username_entry = tk.Entry(self.login_frame)
+        self.username_entry.grid(row=0, column=1)
 
-    tk.Label(root, text="电话:").grid(row=3, column=0)
-    phone_entry = tk.Entry(root)
-    phone_entry.grid(row=3, column=1)
+        tk.Label(self.login_frame, text="密码:").grid(row=1, column=0)
+        self.password_entry = tk.Entry(self.login_frame, show="*")
+        self.password_entry.grid(row=1, column=1)
 
-    tk.Button(root, text="注册", command=register).grid(row=4, column=1)
+        tk.Button(self.login_frame, text="登录", command=self.login).grid(row=2, column=0, columnspan=2)
+        tk.Button(self.login_frame, text="注册", command=self.register).grid(row=3, column=0, columnspan=2)
 
-    root.mainloop()
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        user = self.user_manager.authenticate(username, password)
+        if user:
+            if not user['is_approved']:
+                messagebox.showerror("登录失败", "用户未被批准")
+                return
+            self.current_user = user
+            self.login_frame.destroy()
+            self.create_main_widgets()
+        else:
+            messagebox.showerror("登录失败", "用户名或密码错误")
 
-def create_admin_approve_gui():
-    root = tk.Tk()
-    root.title("管理员审批")
+    def register(self):
+        username = simpledialog.askstring("注册", "请输入用户名:")
+        password = simpledialog.askstring("注册", "请输入密码:", show="*")
+        address = simpledialog.askstring("注册", "请输入地址:")
+        contact = simpledialog.askstring("注册", "请输入联系方式:")
+        is_admin = False
 
-    def approve():
-        username = username_entry.get()
-        is_approved = approve_var.get()
-        response = approve_user(username, is_approved)
-        messagebox.showinfo("审批结果", response)
-        root.destroy()
+        if username and password and address and contact:
+            user = User(username, password, address, contact, is_admin)
+            self.user_manager.add_user(user)
+            messagebox.showinfo("注册成功", "请等待管理员批准")
 
-    users = load_users()
-    user_listbox = tk.Listbox(root)
-    for username in users:
-        user_listbox.insert(tk.END, username)
+    def create_main_widgets(self):
+        self.main_frame = tk.Frame(self.root)
+        self.main_frame.pack(pady=20)
 
-    tk.Label(root, text="选择用户:").grid(row=0, column=0)
-    tk.Label(root, text="审批状态:").grid(row=1, column=0)
-    tk.Button(root, text="批准", command=lambda: approve(1)).grid(row=2, column=0)
-    tk.Button(root, text="拒绝", command=lambda: approve(0)).grid(row=2, column=1)
+        if self.current_user['is_admin']:
+            tk.Button(self.main_frame, text="批准用户", command=self.approve_users).grid(row=0, column=0)
 
-    username_entry = tk.Entry(root)
-    username_entry.grid(row=1, column=1)
-    approve_var = tk.IntVar(value=1)  # 1 for approved, 0 for rejected
+        # 其他功能按钮可以在这里添加
 
-    user_listbox.grid(row=0, column=1)
-    user_listbox.bind('<<ListboxSelect>>', lambda e: selected_user(e, username_entry))
-
-    def selected_user(event, entry):
-        selection = user_listbox.curselection()
-        if selection:
-            username = user_listbox.get(selection)
-            entry.delete(0, tk.END)
-            entry.insert(0, username)
-
-    root.mainloop()
-
-def create_add_item_gui():
-    root = tk.Tk()
-    root.title("添加物品")
-
-    def add_item():
-        item_type = item_type_var.get()
-        name = name_entry.get()
-        description = description_entry.get()
-        address = address_entry.get()
-        contact_phone = contact_phone_entry.get()
-        email = email_entry.get()
-        attributes = get_item_type_attributes(item_type)
-        for attr, default in attributes.items():
-            value = simpledialog.askstring(f"输入{attr}", f"{attr} ({default}):", parent=root)
-            if value:
-                attributes[attr] = value
-
-        new_item = Item(item_type, name, description, address, contact_phone, email, **attributes)
-        add_item(new_item)
-        messagebox.showinfo("成功", "物品添加成功！")
-        root.destroy()
-
-    item_type_var = tk.StringVar()
-    item_type_menu = tk.OptionMenu(root, item_type_var, *load_item_types().keys())
-    item_type_menu.grid(row=0, column=1)
-
-    tk.Label(root, text="物品名称:").grid(row=1, column=0)
-    name_entry = tk.Entry(root)
-    name_entry.grid(row=1, column=1)
-
-    # 其他输入框...
-
-    tk.Button(root, text="添加物品", command=add_item).grid(row=10, column=1)
-
-    root.mainloop()
-
-def get_item_type_attributes(item_type_name):
-    """
-    根据物品类型的名称获取其属性。
-    
-    :param item_type_name: 物品类型的名称
-    :return: 包含物品类型属性的字典
-    """
-    # 从全局 item_types 字典中获取物品类型对象
-    item_type = item_types.get(item_type_name)
-    if item_type:
-        # 返回物品类型的属性字典
-        return item_type.attributes
-    else:
-        # 如果物品类型不存在，返回空字典或错误信息
-        return {}
-
-if __name__ == "__main__":
-    create_register_gui()
+    def approve_users(self):
+        for user in self.user_manager.users:
+            if not user['is_approved']:
+                if messagebox.askyesno("批准用户", f"是否批准用户 {user['username']}?"):
+                    self.user_manager.approve_user(user['username'])
