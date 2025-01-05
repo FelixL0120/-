@@ -1,5 +1,5 @@
 # users.py
-from data import load_data, save_data
+from data import load_data, save_data, USERS_FILE  # 导入 USERS_FILE
 from model import User
 
 class UserManager:
@@ -23,3 +23,4 @@ class UserManager:
                 save_data(self.users, USERS_FILE)
                 return True
         return False
+
