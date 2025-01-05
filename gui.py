@@ -1,9 +1,9 @@
 # /gui.py
-
 import tkinter as tk
-from tkinter import simpledialog, messagebox
-from model import Item, ItemType
-from data import load_item_types, add_item, load_users, save_users, approve_user
+from tkinter import simpledialog, messagebox, ttk
+from model import ItemType, Item, User
+from data import item_types
+from data import load_item_types, add_item, load_users, save_users, register_user, approve_user
 
 def create_register_gui():
     root = tk.Tk()
@@ -14,10 +14,8 @@ def create_register_gui():
         email = email_entry.get()
         address = address_entry.get()
         phone = phone_entry.get()
-        # 这里应该添加逻辑来检查用户名是否已存在
-        new_user = {username: {"email": email, "address": address, "phone": phone, "is_approved": False}}
-        save_users(new_user)
-        messagebox.showinfo("成功", "注册成功，等待管理员审批。")
+        response = register_user(username, email, address, phone)
+        messagebox.showinfo("注册结果", response)
         root.destroy()
 
     tk.Label(root, text="用户名:").grid(row=0, column=0)
@@ -76,6 +74,58 @@ def create_admin_approve_gui():
             entry.insert(0, username)
 
     root.mainloop()
+
+def create_add_item_gui():
+    root = tk.Tk()
+    root.title("添加物品")
+
+    def add_item():
+        item_type = item_type_var.get()
+        name = name_entry.get()
+        description = description_entry.get()
+        address = address_entry.get()
+        contact_phone = contact_phone_entry.get()
+        email = email_entry.get()
+        attributes = get_item_type_attributes(item_type)
+        for attr, default in attributes.items():
+            value = simpledialog.askstring(f"输入{attr}", f"{attr} ({default}):", parent=root)
+            if value:
+                attributes[attr] = value
+
+        new_item = Item(item_type, name, description, address, contact_phone, email, **attributes)
+        add_item(new_item)
+        messagebox.showinfo("成功", "物品添加成功！")
+        root.destroy()
+
+    item_type_var = tk.StringVar()
+    item_type_menu = tk.OptionMenu(root, item_type_var, *load_item_types().keys())
+    item_type_menu.grid(row=0, column=1)
+
+    tk.Label(root, text="物品名称:").grid(row=1, column=0)
+    name_entry = tk.Entry(root)
+    name_entry.grid(row=1, column=1)
+
+    # 其他输入框...
+
+    tk.Button(root, text="添加物品", command=add_item).grid(row=10, column=1)
+
+    root.mainloop()
+
+def get_item_type_attributes(item_type_name):
+    """
+    根据物品类型的名称获取其属性。
+    
+    :param item_type_name: 物品类型的名称
+    :return: 包含物品类型属性的字典
+    """
+    # 从全局 item_types 字典中获取物品类型对象
+    item_type = item_types.get(item_type_name)
+    if item_type:
+        # 返回物品类型的属性字典
+        return item_type.attributes
+    else:
+        # 如果物品类型不存在，返回空字典或错误信息
+        return {}
 
 if __name__ == "__main__":
     create_register_gui()
