@@ -30,6 +30,17 @@ class App:
 
         tk.Button(self.login_frame, text="登录", command=self.login).grid(row=2, column=0, columnspan=2)
         tk.Button(self.login_frame, text="注册", command=self.register).grid(row=3, column=0, columnspan=2)
+        tk.Button(self.login_frame, text="注册管理员", command=self.register_admin).grid(row=4, column=0, columnspan=2)
+
+    def register_admin(self):
+        username = simpledialog.askstring("注册管理员", "请输入用户名:")
+        password = simpledialog.askstring("注册管理员", "请输入密码:", show="*")
+        address = simpledialog.askstring("注册管理员", "请输入地址:")
+        contact = simpledialog.askstring("注册管理员", "请输入联系方式:")
+
+        if username and password and address and contact:
+            if self.user_manager.register_admin(username, password, address, contact):
+                messagebox.showinfo("注册成功", "管理员账户注册成功")
 
     def login(self):
         username = self.username_entry.get()
