@@ -24,3 +24,16 @@ class UserManager:
                 return True
         return False
 
+    def register_admin(self, username, password, address, contact):
+        user = User(username, password, address, contact, is_admin=True)
+        self.add_user(user)
+        return True
+
+    def approve_user(self, username):
+        for user in self.users:
+            if user['username'] == username:
+                user['is_approved'] = True
+                save_data(self.users, USERS_FILE)
+                return True
+        return False
+
