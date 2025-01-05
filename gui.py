@@ -62,6 +62,43 @@ def create_register_gui():
 
     root.mainloop()
 
+def create_admin_approve_gui():
+    root = tk.Tk()
+    root.title("管理员审批")
+
+    def approve():
+        username = username_entry.get()
+        is_approved = approve_var.get()
+        approve_user(username, is_approved)
+        messagebox.showinfo("成功", "审批成功。")
+        root.destroy()
+
+    users = load_users()
+    user_listbox = tk.Listbox(root)
+    for username, info in users.items():
+        user_listbox.insert(tk.END, username)
+
+    tk.Label(root, text="选择用户:").grid(row=0, column=0)
+    tk.Label(root, text="审批状态:").grid(row=1, column=0)
+    tk.Button(root, text="批准", command=lambda: approve(True)).grid(row=2, column=0)
+    tk.Button(root, text="拒绝", command=lambda: approve(False)).grid(row=2, column=1)
+
+    username_entry = tk.Entry(root)
+    username_entry.grid(row=1, column=1)
+    approve_var = tk.IntVar(value=1)  # 1 for approved, 0 for rejected
+
+    user_listbox.grid(row=0, column=1)
+    user_listbox.bind('<<ListboxSelect>>', lambda e: selected_user(e, username_entry))
+
+    def selected_user(event, entry):
+        selection = user_listbox.curselection()
+        if selection:
+            username = user_listbox.get(selection)
+            entry.delete(0, tk.END)
+            entry.insert(0, username)
+
+    root.mainloop()
+    
 if __name__ == "__main__":
     create_gui()
 
