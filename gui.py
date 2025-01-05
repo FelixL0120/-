@@ -28,6 +28,40 @@ def create_gui():
 
     root.mainloop()
 
+def create_register_gui():
+    root = tk.Tk()
+    root.title("用户注册")
+
+    def register():
+        username = username_entry.get()
+        email = email_entry.get()
+        address = address_entry.get()
+        phone = phone_entry.get()
+        new_user = User(username, email, address, phone)
+        register_user(new_user)
+        messagebox.showinfo("成功", "注册成功，等待管理员审批。")
+        root.destroy()
+
+    tk.Label(root, text="用户名:").grid(row=0, column=0)
+    username_entry = tk.Entry(root)
+    username_entry.grid(row=0, column=1)
+
+    tk.Label(root, text="邮箱:").grid(row=1, column=0)
+    email_entry = tk.Entry(root)
+    email_entry.grid(row=1, column=1)
+
+    tk.Label(root, text="地址:").grid(row=2, column=0)
+    address_entry = tk.Entry(root)
+    address_entry.grid(row=2, column=1)
+
+    tk.Label(root, text="电话:").grid(row=3, column=0)
+    phone_entry = tk.Entry(root)
+    phone_entry.grid(row=3, column=1)
+
+    tk.Button(root, text="注册", command=register).grid(row=4, column=1)
+
+    root.mainloop()
+
 if __name__ == "__main__":
     create_gui()
 
